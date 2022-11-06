@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <title>Resume store</title>
+    <style>
+        label {
+            font-size: 13px;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container-fluid bg-dark">
+        <div class="row">
+            <div class="col bg-white p-3" style="position: fixed;width:100%;">
+                <a href="/" class="btn btn-sm">List Resumes</a>
+                <a href="/add" class="btn btn-primary btn-sm">Upload Resume</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col vh-100 d-flex justify-content-center align-items-center">
+                <div class="bg-white p-4" style="border-radius: 10px;">
+                    <h3>Upload Resume</h3>
+                    <form id="form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" class="form-control" id="name" required>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="dob">Date of Birth</label>
+                            <input type="date" class="form-control" id="dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Select country</label>
+                            <select name="country" id="country" class="form-control" required>
+                                <option value="">Not selected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="file">Upload Resume</label>
+                            <input type="file" class="form-control" id="resume" accept="application/pdf" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3" id="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const _country = document.getElementById("country")
+    const countries = fetch("/api/resume/countries")
+        .then(res => res.json())
+        .then(({ data }) => {
+            data.map((o) => {
+                _country.innerHTML += `<option value=${o.name.replaceAll(" ", '-')}>${o.name} - ${o.code}</option>`
+            })
+        })
+        .catch((err) => {
+            console.log("somethimg wen wromng,while fetching country")
+        })
+
+    // onsubmit
+    const form = document.getElementById("form")
+    const submitbtn = document.getElementById("submit")
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault()
+        submitbtn.disabled = true
+        submitbtn.innerText = "Submiting....."
+        const name = event.target[0].value
+        const dob = event.target[1].value
+        const country = event.target[2].value
+        const file = document.getElementById("resume").files[0];
+        console.log(file);
+        const fd = new FormData()
+        fd.append('name', name)
+        fd.append('dob', dob)
+        fd.append('country', country)
+        fd.append('file', file)
+        try {
+            const data = await fetch('/api/resume', {
+                body: fd,
+                method: "post"
+            })
+            form.reset()
+            submitbtn.disabled = false
+            submitbtn.innerText = "Submit"
+        } catch (error) {
+            console.log(error);
+        }
+    })
+</script>
+
+</html>

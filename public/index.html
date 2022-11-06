@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <title>Resume store</title>
+    <style>
+        .main {
+            padding: 15px;
+            padding-top: 80px;
+        }
+    </style>
+
+</head>
+
+<body class="bg-dark">
+    <div class="container-fluid bg-dark">
+        <div class="row">
+            <div class="col bg-white p-3" style="position: fixed;width:100%; z-index: 4;">
+                <a href="/" class="btn btn-primary btn-sm">List Resumes</a>
+                <a href="/add" class="btn btn-sm">Upload Resume</a>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="d-flex main">
+                <button onclick="sortByDate()" class="btn bg-white btn-sm">Filter by Created date</button>
+                <button onclick="sortByName()" class="btn bg-white btn-sm" style="margin-left: 10px;">Filter by Name
+                    (Alphabetically)</button>
+            </div>
+            <div class="row bg-dark" id="items">
+                <!-- add items -->
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    var resumes = []
+    const items = document.getElementById("items")
+    items.innerHTML = "<button class='btn btn-dark' disabled>loading....</button>"
+    fetch("/api/resume")
+        .then(res => res.json())
+        .then(({ data }) => {
+            resumes = data
+            items.innerHTML = ""
+            data.map((o) => {
+                displayData(o)
+            })
+        })
+
+    const deleteOne = (event, id) => {
+        event.disabled = true
+        fetch('/api/resume/' + id, {
+            method: "DELETE"
+        })
+            .then(res => {
+                window.location.href = "/"
+            })
+    }
+
+    const displayData = (o) => {
+        items.innerHTML += `
+                <div class="col-12 col-md-3 bg-white p-3 m-2" style="border-radius:8px;">
+                    <div class="row">
+                        <div class="col-3">Name</div>
+                        <div class="col-9">${o.name}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">Date of Birth</div>
+                        <div class="col-9">${o.dob.split("T")[0]}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">Country</div>
+                        <div class="col-9">${o.country.replaceAll("-", " ")}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">Resume</div>
+                        <div class="col-9">
+                            <a href="${o.filePath}">See Resume</a>
+                            </div>
+                    </div>
+                    <div class="row pt-2">
+                        <div class="col-12">
+                            <button onClick="deleteOne(this,${o.id})" class="btn btn-danger w-100">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+    }
+
+    const sortByName = () => {
+        resumes.sort((a, b) => a.name.localeCompare(b.name))
+        items.innerHTML = ""
+        resumes.map((o) => {
+            displayData(o)
+        })
+    }
+
+    const sortByDate = () => {
+        resumes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        items.innerHTML = ""
+        resumes.map((o) => {
+            displayData(o)
+        })
+    }
+</script>
+
+</html>
